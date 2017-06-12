@@ -58,7 +58,7 @@ def find_r_peaks(filtered_ecg, fs):
     temporary_peaks = [i + np.argmax(filtered_ecg[i:i + fs]) for i in range(ecg_length)]
 
     indices_buffer = set()
-    for i in temporary_picks:
+    for i in temporary_peaks:
         before = i - tolerantion
         if before < 0:
             continue

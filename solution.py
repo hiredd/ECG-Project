@@ -2,26 +2,55 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.integrate as integrate
 from scipy.io import loadmat
-from scipy.signal import butter, filtfilt
-from scipy.fftpack import fft
+from scipy import signal, fftpack
 plt.close("all")
 
 
 def filter_ecg(ecg, fc1, fc2, fs):
+    """
+    Parameters:
+    -----------
+    ecg : array of floats
+        ECG signal array.
+    fc1 : float
+        Lower cutoff frequency (Hz).
+    fc2 : float
+        Upper cutoff fbtw requency (Hz).
+    fs : float
+        Sampling frequency (Hz).
+        
+    Returns:
+    --------
+    filtered_ecg : array of floats
+        Filtered ECG signal.
+    """
 
     nyquist_frequency = fs / 2
     lowcut = fc1 / nyquist_frequency
     highcut = fc2 / nyquist_frequency
-    b, a = butter(5, [lowcut, highcut], btype='band')
-# Numerator (b) and denominator (a) polynomials of the IIR filter.
-# Butterworth filter has as flat a frequency response as possible in passband.
-    filtered_ecg = filtfilt(b, a, ecg)
-# Provides the filtered output with the same shape as x.
+    b, a = signal.butter(5, [lowcut, highcut], btype='band')
+    # Numerator (b) and denominator (a) polynomials of the IIR filter.
+    # Butterworth filter has as flat a frequency response as possible in passband.
+    filtered_ecg = signal.filtfilt(b, a, ecg)
+    # Provides the filtered output with the same shape as x.
 
     return filtered_ecg
 
 
 def find_r_peaks(filtered_ecg, fs):
+    """
+    Parameters:
+    -----------
+    filtered_ecg : array of floats
+        Filtered ECG signal array.
+    fs : float
+        Sampling frequency (Hz).
+    
+    Returns:
+    --------
+    r_peaks_idx : array of ints
+        Array containing indices (positions) of R-peaks.    
+    """
 
     ecg_length = len(filtered_ecg)
     tolerantion = int(0.1*fs)
@@ -49,9 +78,23 @@ def find_r_peaks(filtered_ecg, fs):
 
 
 def calc_freq_content(ecg, f_max, fs):
-
+    """
+    Parameters:
+    -----------
+    ecg : array of floats
+        ECG signal array.
+    f_max : float
+        Upper bound of frequency band (Hz).
+    fs : float
+        Sampling frequency (Hz).
+        
+    Returns:
+    --------
+    freq_content : float
+        Percentage of energy in band (0, f_max Hz).
+    """
     x_acis = int((len(ecg))/fs)
-    FFT = fft(ecg, n=x_acis)
+    FFT = fftpack.fft(ecg, n=x_acis)
     FFT = abs(FFT[0:int(x_acis/2)])
 
     E1 = (FFT[0:int(f_max)])**2

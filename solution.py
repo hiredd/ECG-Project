@@ -54,13 +54,10 @@ def find_r_peaks(filtered_ecg, fs):
 
     ecg_length = len(filtered_ecg)
     tolerantion = int(0.1*fs)
-    tmp = []
-    checked_tmp = []
-    r_peaks_idx = []
 
-    for i in range(0, ecg_length):
-        tmp.append(i + np.argmax(filtered_ecg[i:(i+fs)]))
+    tmp = [i + np.argmax(filtered_ecg[i:i + fs]) for i in range(ecg_length)]
 
+    indices_buffer = set()
     for i in tmp:
         before = i - tolerantion
         if before < 0:
@@ -68,13 +65,11 @@ def find_r_peaks(filtered_ecg, fs):
         after = i + tolerantion
         if after > (ecg_length+360):
             break
-        checked_tmp.append(before + np.argmax(filtered_ecg[before:after]))
 
-    for i in checked_tmp:
-        if i not in r_peaks_idx:
-            r_peaks_idx.append(i)
+        peak_index = before + np.argmax(filtered_ecg[before:after])
+        indices_buffer.add(peak_index)
 
-    return r_peaks_idx
+    return sorted(list(indices_buffer))
 
 
 def calc_freq_content(ecg, f_max, fs):

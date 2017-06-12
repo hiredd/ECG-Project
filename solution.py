@@ -18,7 +18,7 @@ def filter_ecg(ecg, fc1, fc2, fs):
         Upper cutoff fbtw requency (Hz).
     fs : float
         Sampling frequency (Hz).
-        
+
     Returns:
     --------
     filtered_ecg : array of floats
@@ -28,7 +28,7 @@ def filter_ecg(ecg, fc1, fc2, fs):
     nyquist_frequency = fs / 2
     lowcut = fc1 / nyquist_frequency
     highcut = fc2 / nyquist_frequency
-    b, a = signal.butter(5, [lowcut, highcut], btype='band')
+    b, a = signal.butter(8, [lowcut, highcut], btype='band')
     # Numerator (b) and denominator (a) polynomials of the IIR filter.
     # Butterworth filter has as flat a frequency response as possible in passband.
     filtered_ecg = signal.filtfilt(b, a, ecg)
@@ -45,34 +45,31 @@ def find_r_peaks(filtered_ecg, fs):
         Filtered ECG signal array.
     fs : float
         Sampling frequency (Hz).
-    
+
     Returns:
     --------
     r_peaks_idx : array of ints
-        Array containing indices (positions) of R-peaks.    
+    Array containing indices (positions) of R-peaks.
     """
 
     ecg_length = len(filtered_ecg)
     tolerantion = int(0.1*fs)
-    tmp = []
-    checked_tmp = []
-    r_peaks_idx = []
 
-    for i in range(0, ecg_length):
-        tmp.append(i + np.argmax(filtered_ecg[i:(i+fs)]))
+    temporary_peaks = [i + np.argmax(filtered_ecg[i:i + fs]) for i in range(ecg_length)]
 
-    for i in tmp:
+    indices_buffer = set()
+    for i in temporary_picks:
         before = i - tolerantion
         if before < 0:
             continue
         after = i + tolerantion
-        if after > (ecg_length+360):
+        if after > (ecg_length+fs):
             break
-        checked_tmp.append(before + np.argmax(filtered_ecg[before:after]))
 
-    for i in checked_tmp:
-        if i not in r_peaks_idx:
-            r_peaks_idx.append(i)
+        peak_index = before + np.argmax(filtered_ecg[before:after])
+        indices_buffer.add(peak_index)
+
+    r_peaks_idx = sorted(list(indices_buffer))
 
     return r_peaks_idx
 
@@ -87,7 +84,7 @@ def calc_freq_content(ecg, f_max, fs):
         Upper bound of frequency band (Hz).
     fs : float
         Sampling frequency (Hz).
-        
+
     Returns:
     --------
     freq_content : float
